@@ -1,44 +1,48 @@
-// app/api/generate-tweets/route.ts
 import { NextResponse } from "next/server";
+import { anthropic } from "@ai-sdk/anthropic";
+import { streamText } from "ai";
+
+export const runtime = "edge";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { prompt, videoUrl, exampleTweets } = body;
+  try {
+    const { videoUrl, exampleTweets } = await req.json();
 
-  const protocol = req.headers.get("x-forwarded-proto") || "http";
-  const host = req.headers.get("host") || "localhost:3000";
-  const baseUrl = `${protocol}://${host}`;
+    const protocol = req.headers.get("x-forwarded-proto") || "http";
+    const host = req.headers.get("host") || "localhost:3000";
+    const baseUrl = `${protocol}://${host}`;
 
-  // Fetch transcript
-  const transcriptRes = await fetch(
-    `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
-  );
-  const { transcript } = await transcriptRes.json();
+    // Fetch transcript
+    const transcriptRes = await fetch(
+      `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
+    );
 
-  // Generate tweets
-  const aiResponse = await fetch(`${baseUrl}/api/ai-interaction`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt:
-        "Generate a series of tweets based on the following transcript and example tweets:",
-      context: { transcript, exampleTweets },
-    }),
-  });
-
-  // Handle streaming response
-  const reader = aiResponse.body?.getReader();
-  let generatedTweets = "";
-
-  if (reader) {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      generatedTweets += new TextDecoder().decode(value);
+    if (!transcriptRes.ok) {
+      throw new Error(
+        `Failed to fetch transcript: ${transcriptRes.statusText}`
+      );
     }
-  }
 
-  return new Response(generatedTweets, {
-    headers: { "Content-Type": "text/plain" },
-  });
+    const { transcript } = await transcriptRes.json();
+
+    const prompt = `Generate a series of tweets based on the following transcript and example tweets:
+    Transcript: ${transcript}
+    Example Tweets: ${JSON.stringify(exampleTweets)}
+    
+    Assistant: `;
+
+    const result = await streamText({
+      model: anthropic("claude-3-opus-20240229"),
+      // maxTokens: 2000,
+      prompt: prompt,
+    });
+
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error("Error in generate-tweets API:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }
