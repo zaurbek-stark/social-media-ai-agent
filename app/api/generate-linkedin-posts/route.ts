@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
   // Fetch transcript
   const transcriptRes = await fetch(
-    `${baseUrl}/api/transcript?url=${encodeURIComponent(videoUrl)}`
+    `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
   );
   const { transcript } = await transcriptRes.json();
 

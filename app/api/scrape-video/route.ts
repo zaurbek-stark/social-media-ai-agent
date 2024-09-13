@@ -4,6 +4,7 @@ import { YoutubeTranscript } from "youtube-transcript";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
+  console.log("🚀 ~ GET ~ url:", url);
 
   if (!url) {
     return NextResponse.json(

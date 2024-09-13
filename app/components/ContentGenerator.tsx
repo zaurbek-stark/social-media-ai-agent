@@ -2,20 +2,24 @@ import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import SocialPreview from "./SocialPreview";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
-import { useChat } from "ai/react";
+import { useCompletion } from "ai/react";
 
 const ContentGenerator: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [socialPosts, setSocialPosts] = useState<string[]>(["", "", ""]);
+  const [videoUrl, setVideoUrl] = useState("");
   const [error, setError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-  const { input, handleInputChange, handleSubmit } = useChat({
+  const { complete } = useCompletion({
     api: "/api/generate-tweets",
-    onFinish: (message) => {
+    body: {
+      videoUrl,
+    },
+    onFinish: (prompt, completion) => {
       setError("");
 
-      let generatedContent = message.content;
+      let generatedContent = completion;
       setSocialPosts([generatedContent]);
       setIsLoading(false);
     },
@@ -56,7 +60,7 @@ const ContentGenerator: React.FC = () => {
     event.preventDefault();
 
     if (!user) {
-      localStorage.setItem("lastInput", input);
+      localStorage.setItem("lastInput", videoUrl);
       openSignUp();
       return;
     }
@@ -66,7 +70,11 @@ const ContentGenerator: React.FC = () => {
     setSocialPosts([]);
 
     try {
-      handleSubmit(event);
+      complete(videoUrl, {
+        body: {
+          context: "HELLO",
+        },
+      });
     } catch (error) {
       setError(
         "There was an error generating the illustration. Please try again."
@@ -88,8 +96,8 @@ const ContentGenerator: React.FC = () => {
             name="idea-input"
             type="text"
             placeholder='e.g. "Smart work beats hard work"'
-            value={input}
-            onChange={(e) => handleInputChange(e)}
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
           />
         </div>
         <div>

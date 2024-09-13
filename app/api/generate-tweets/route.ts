@@ -1,7 +1,9 @@
+// app/api/generate-tweets/route.ts
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { videoUrl, exampleTweets } = await req.json();
+  const body = await req.json();
+  const { prompt, videoUrl, exampleTweets } = body;
 
   const protocol = req.headers.get("x-forwarded-proto") || "http";
   const host = req.headers.get("host") || "localhost:3000";
@@ -9,7 +11,7 @@ export async function POST(req: Request) {
 
   // Fetch transcript
   const transcriptRes = await fetch(
-    `${baseUrl}/api/transcript?url=${encodeURIComponent(videoUrl)}`
+    `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
   );
   const { transcript } = await transcriptRes.json();
 
@@ -24,6 +26,19 @@ export async function POST(req: Request) {
     }),
   });
 
-  const generatedTweets = await aiResponse.json();
-  return NextResponse.json(generatedTweets);
+  // Handle streaming response
+  const reader = aiResponse.body?.getReader();
+  let generatedTweets = "";
+
+  if (reader) {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      generatedTweets += new TextDecoder().decode(value);
+    }
+  }
+
+  return new Response(generatedTweets, {
+    headers: { "Content-Type": "text/plain" },
+  });
 }
