@@ -13,6 +13,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
     "@clerk/nextjs": "^5.0.1",
     "@clerk/themes": "^2.0.0",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",

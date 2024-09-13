@@ -11,7 +11,7 @@ const ContentGenerator: React.FC = () => {
   const { user } = useUser();
   const { openSignUp } = useClerk();
   const { input, handleInputChange, handleSubmit } = useChat({
-    api: "/api/social-posts",
+    api: "/api/generate-tweets",
     onFinish: (message) => {
       setError("");
 
