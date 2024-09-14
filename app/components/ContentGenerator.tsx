@@ -5,33 +5,25 @@ import { getAssetPrompt } from "../utils/getAssetPrompt";
 import { useCompletion } from "ai/react";
 
 const ContentGenerator: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [socialPosts, setSocialPosts] = useState<string[]>(["", "", ""]);
   const [videoUrl, setVideoUrl] = useState("");
   const [error, setError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-  const { completion, complete } = useCompletion({
-    api: "/api/generate-tweets",
-    body: {
-      videoUrl,
-    },
-    onFinish: (prompt, completion) => {
-      setError("");
 
-      let generatedContent = completion;
-      setSocialPosts([generatedContent]);
-      setIsLoading(false);
-    },
+  const {
+    completion,
+    complete,
+    isLoading,
+    error: completionError,
+  } = useCompletion({
+    api: "/api/generate-tweets",
     onError: (error) => {
-      setError(`An error occurred calling the OpenAI API: ${error}`);
-      setIsLoading(false);
+      setError(`An error occurred: ${error.message}`);
     },
   });
 
   useEffect(() => {
     if (user) {
-      // If the user is authenticated, get the last input from localStorage
       const savedInput = localStorage.getItem("lastInput");
       if (savedInput) {
         setVideoUrl(savedInput);
@@ -39,22 +31,6 @@ const ContentGenerator: React.FC = () => {
       }
     }
   }, [user]);
-
-  const generateAssets = async (input: string) => {
-    const response = await fetch(`/api/social-posts`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: getAssetPrompt(input) }),
-    });
-    const { posts, message } = await response.json();
-    if (posts) {
-      setSocialPosts((currentPosts) => [...currentPosts, posts]);
-    } else {
-      setError(message);
-    }
-  };
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -66,56 +42,58 @@ const ContentGenerator: React.FC = () => {
     }
 
     setError("");
-    setIsLoading(true);
-    setSocialPosts([]);
 
     try {
-      complete(videoUrl, {
-        body: {
-          videoUrl,
-          context: "HELLO",
-        },
+      await complete(videoUrl, {
+        body: { videoUrl, exampleTweets: "TEST" },
       });
     } catch (error) {
-      setError(
-        "There was an error generating the illustration. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      setError("There was an error generating content. Please try again.");
     }
   };
 
   return (
-    <div className="flex flex-col">
-      <p className="instructions-text">
-        Enter the idea/concept that you want to visualize.
+    <div className="flex flex-col max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Content Generator</h1>
+      <p className="mb-4">
+        Enter a YouTube video URL to generate social media content.
       </p>
-      <form className="inline-flex m-auto" onSubmit={onSubmit}>
-        <div className="input-group">
+      <form onSubmit={onSubmit} className="mb-6">
+        <div className="flex items-center mb-4">
           <input
-            className="input-style"
-            name="idea-input"
+            className="flex-grow p-2 border rounded-l text-gray-600"
             type="text"
-            placeholder='e.g. "Smart work beats hard work"'
+            placeholder="Enter YouTube video URL"
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
-          />
-        </div>
-        <div>
-          <button
-            className="label-style send-button"
-            type="submit"
             disabled={isLoading}
           />
+          <button
+            type="submit"
+            className={`p-2 rounded-r ${
+              isLoading
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600 text-white"
+            }`}
+            disabled={isLoading}
+          >
+            {isLoading ? "Generating..." : "Generate"}
+          </button>
         </div>
       </form>
+
       {isLoading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
+        <div className="text-center mb-4">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-2">Generating content...</p>
         </div>
       )}
-      {error && <p className="error-message">{error}</p>}
-      <SocialPreview posts={[completion]} />
+
+      {(error || completionError) && (
+        <p className="text-red-500 mb-4">{error || completionError?.message}</p>
+      )}
+
+      {completion && <SocialPreview posts={[completion]} />}
     </div>
   );
 };
