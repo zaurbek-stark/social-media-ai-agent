@@ -1,112 +1,136 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import SocialPreview from "./SocialPreview";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
-import { useChat } from "ai/react";
+import { useCompletion } from "ai/react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Wand2 } from "lucide-react";
 
 const ContentGenerator: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [socialPosts, setSocialPosts] = useState<string[]>(["", "", ""]);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [xPosts, setXPosts] = useState("");
+  const [linkedInPosts, setLinkedInPosts] = useState("");
+
   const [error, setError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-  const { input, handleInputChange, handleSubmit } = useChat({
-    api: "/api/social-posts",
-    onFinish: (message) => {
-      setError("");
 
-      let generatedContent = message.content;
-      setSocialPosts([generatedContent]);
-      setIsLoading(false);
-    },
+  const {
+    completion,
+    complete,
+    isLoading,
+    error: completionError,
+  } = useCompletion({
+    api: "/api/generate-tweets",
     onError: (error) => {
-      setError(`An error occurred calling the OpenAI API: ${error}`);
-      setIsLoading(false);
+      setError(`An error occurred: ${error.message}`);
     },
   });
 
-  // useEffect(() => {
-  //   if (user) {
-  //     // If the user is authenticated, get the last input from localStorage
-  //     const savedInput = localStorage.getItem("lastInput");
-  //     if (savedInput) {
-  //       handleInputChange({e: {target: savedInput}} as React.ChangeEvent<HTMLInputElement>);
-  //       localStorage.removeItem("lastInput");
-  //     }
-  //   }
-  // }, [user]);
-
-  const generateAssets = async (input: string) => {
-    const response = await fetch(`/api/social-posts`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: getAssetPrompt(input) }),
-    });
-    const { posts, message } = await response.json();
-    if (posts) {
-      setSocialPosts((currentPosts) => [...currentPosts, posts]);
-    } else {
-      setError(message);
+  useEffect(() => {
+    if (user) {
+      const savedInput = localStorage.getItem("lastInput");
+      if (savedInput) {
+        setVideoUrl(savedInput);
+        localStorage.removeItem("lastInput");
+      }
     }
-  };
+  }, [user]);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user) {
-      localStorage.setItem("lastInput", input);
+      localStorage.setItem("lastInput", videoUrl);
       openSignUp();
       return;
     }
 
     setError("");
-    setIsLoading(true);
-    setSocialPosts([]);
 
     try {
-      handleSubmit(event);
+      await complete(videoUrl, {
+        body: { videoUrl, exampleTweets: xPosts },
+      });
     } catch (error) {
-      setError(
-        "There was an error generating the illustration. Please try again."
-      );
-    } finally {
-      setIsLoading(false);
+      setError("There was an error generating content. Please try again.");
     }
   };
 
   return (
-    <div className="flex flex-col">
-      <p className="instructions-text">
-        Enter the idea/concept that you want to visualize.
-      </p>
-      <form className="inline-flex m-auto" onSubmit={onSubmit}>
-        <div className="input-group">
-          <input
-            className="input-style"
-            name="idea-input"
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-background rounded-lg shadow-md text-foreground">
+      <h3 className="text-2xl font-bold mb-6">
+        Drop the link to your YouTube video below
+      </h3>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-2 mb-10 text-start">
+          <Label htmlFor="youtube-link">YouTube Video Link:</Label>
+          <Input
+            id="youtube-link"
             type="text"
-            placeholder='e.g. "Smart work beats hard work"'
-            value={input}
-            onChange={(e) => handleInputChange(e)}
-          />
-        </div>
-        <div>
-          <button
-            className="label-style send-button"
-            type="submit"
+            placeholder="Enter YouTube video URL..."
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
             disabled={isLoading}
           />
         </div>
+
+        <h3 className="text-2xl font-bold mb-6">Add inspiration content</h3>
+        <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
+        <div className="grid grid-cols-2 space-x-2">
+          <div className="text-start">
+            <Label htmlFor="x-posts">X Posts:</Label>
+            <Textarea
+              className="mt-2"
+              id="x-posts"
+              placeholder="Paste example X posts here..."
+              rows={6}
+              value={xPosts}
+              onChange={(e) => setXPosts(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+          <div className="text-start">
+            <Label htmlFor="linkedin-posts">LinkedIn Posts:</Label>
+            <Textarea
+              className="mt-2"
+              id="linkedin-posts"
+              placeholder="Paste example LinkedIn posts here..."
+              rows={6}
+              value={linkedInPosts}
+              onChange={(e) => setLinkedInPosts(e.target.value)}
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+
+        <Button
+          className="w-full bg-primary"
+          type="submit"
+          disabled={isLoading}
+        >
+          <Wand2 className="w-4 h-4 mr-2" />
+          {isLoading ? "Generating..." : "Start generating"}
+        </Button>
       </form>
+
       {isLoading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
+        <div className="text-center mb-4">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="mt-2">Generating content...</p>
         </div>
       )}
-      {error && <p className="error-message">{error}</p>}
-      <SocialPreview posts={socialPosts} />
+
+      {(error || completionError) && (
+        <p className="text-red-500 mb-4">{error || completionError?.message}</p>
+      )}
+
+      {completion && <SocialPreview posts={[completion]} />}
     </div>
   );
 };

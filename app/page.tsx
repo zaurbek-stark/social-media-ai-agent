@@ -1,4 +1,4 @@
-import IntroScreen from "./components/IntroScreen";
+import ContentGenerator from "./components/ContentGenerator";
 
 export default function Home() {
   return (
@@ -12,7 +12,7 @@ export default function Home() {
             posts for inspiriation, and watch the magic happen!
           </p>
         </div>
-        <IntroScreen />
+        <ContentGenerator />
       </div>
     </main>
   );
