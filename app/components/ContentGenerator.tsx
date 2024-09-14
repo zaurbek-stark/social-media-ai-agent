@@ -11,7 +11,7 @@ const ContentGenerator: React.FC = () => {
   const [error, setError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-  const { complete } = useCompletion({
+  const { completion, complete } = useCompletion({
     api: "/api/generate-tweets",
     body: {
       videoUrl,
@@ -29,16 +29,16 @@ const ContentGenerator: React.FC = () => {
     },
   });
 
-  // useEffect(() => {
-  //   if (user) {
-  //     // If the user is authenticated, get the last input from localStorage
-  //     const savedInput = localStorage.getItem("lastInput");
-  //     if (savedInput) {
-  //       handleInputChange({e: {target: savedInput}} as React.ChangeEvent<HTMLInputElement>);
-  //       localStorage.removeItem("lastInput");
-  //     }
-  //   }
-  // }, [user]);
+  useEffect(() => {
+    if (user) {
+      // If the user is authenticated, get the last input from localStorage
+      const savedInput = localStorage.getItem("lastInput");
+      if (savedInput) {
+        setVideoUrl(savedInput);
+        localStorage.removeItem("lastInput");
+      }
+    }
+  }, [user]);
 
   const generateAssets = async (input: string) => {
     const response = await fetch(`/api/social-posts`, {
@@ -72,6 +72,7 @@ const ContentGenerator: React.FC = () => {
     try {
       complete(videoUrl, {
         body: {
+          videoUrl,
           context: "HELLO",
         },
       });
@@ -114,7 +115,7 @@ const ContentGenerator: React.FC = () => {
         </div>
       )}
       {error && <p className="error-message">{error}</p>}
-      <SocialPreview posts={socialPosts} />
+      <SocialPreview posts={[completion]} />
     </div>
   );
 };
