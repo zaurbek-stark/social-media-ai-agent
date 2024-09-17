@@ -10,26 +10,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
+import { experimental_useObject as useObject } from "ai/react";
+import { postSchema } from "../api/schema/schema";
 
 const ContentGenerator: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [xPosts, setXPosts] = useState("");
   const [linkedInPosts, setLinkedInPosts] = useState("");
-
-  const [error, setError] = useState("");
+  const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
-  const {
-    completion,
-    complete,
-    isLoading,
-    error: completionError,
-  } = useCompletion({
+  // const {
+  //   completion,
+  //   complete,
+  //   isLoading,
+  //   error: completionError,
+  // } = useCompletion({
+  //   api: "/api/generate-tweets",
+  //   onError: (error) => {
+  //     setDisplayError(`An error occurred: ${error.message}`);
+  //   },
+  // });
+
+  const { object, submit, isLoading, error } = useObject({
     api: "/api/generate-tweets",
-    onError: (error) => {
-      setError(`An error occurred: ${error.message}`);
-    },
+    schema: postSchema,
   });
 
   useEffect(() => {
@@ -51,25 +57,23 @@ const ContentGenerator: React.FC = () => {
       return;
     }
 
-    setError("");
+    setDisplayError("");
 
     try {
-      await complete(videoUrl, {
+      await submit({
         body: { videoUrl, exampleTweets: xPosts },
       });
     } catch (error) {
-      setError("There was an error generating content. Please try again.");
+      setDisplayError(
+        "There was an error generating content. Please try again."
+      );
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-background rounded-lg shadow-md text-foreground">
-      <h3 className="text-2xl font-bold mb-6">
-        Drop the link to your YouTube video below
-      </h3>
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="space-y-2 mb-10 text-start">
-          <Label htmlFor="youtube-link">YouTube Video Link:</Label>
           <Input
             id="youtube-link"
             type="text"
@@ -80,11 +84,9 @@ const ContentGenerator: React.FC = () => {
           />
         </div>
 
-        <h3 className="text-2xl font-bold mb-6">Add inspiration content</h3>
         <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
         <div className="grid grid-cols-2 space-x-2">
           <div className="text-start">
-            <Label htmlFor="x-posts">X Posts:</Label>
             <Textarea
               className="mt-2"
               id="x-posts"
@@ -96,7 +98,6 @@ const ContentGenerator: React.FC = () => {
             />
           </div>
           <div className="text-start">
-            <Label htmlFor="linkedin-posts">LinkedIn Posts:</Label>
             <Textarea
               className="mt-2"
               id="linkedin-posts"
@@ -126,11 +127,11 @@ const ContentGenerator: React.FC = () => {
         </div>
       )}
 
-      {(error || completionError) && (
-        <p className="text-red-500 mb-4">{error || completionError?.message}</p>
+      {(error || displayError) && (
+        <p className="text-red-500 mb-4">{error?.message || displayError}</p>
       )}
 
-      {completion && <SocialPreview posts={[completion]} />}
+      {object?.posts && <SocialPreview posts={object?.posts} />}
     </div>
   );
 };
