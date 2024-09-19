@@ -6,20 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Star, Trash2 } from "lucide-react";
 
 interface PostContainerProps {
-  maxHeight?: string;
+  postsRaw: string[];
   className?: string;
 }
 
 export default function PostContainer({
-  maxHeight = "max-h-[100px]",
+  postsRaw,
   className = "",
 }: PostContainerProps) {
   const [posts, setPosts] = useState<Post[]>(
+    // postsRaw.map((post, i) => ({
     Array.from({ length: 6 }, (_, i) => ({
       id: i + 1,
       content: `This is an example post content for post ${
         i + 1
       }. It can be much longer in real scenarios.`,
+      // content: posts,
       isFavorite: false,
     }))
   );
@@ -37,7 +39,7 @@ export default function PostContainer({
   };
 
   return (
-    <div className={`w-full max-w-2xl mx-auto text-foreground ${className}`}>
+    <div className={`w-full mx-auto text-foreground p-6 ${className}`}>
       <div className="rounded-lg shadow-lg overflow-hidden grid grid-cols-3 gap-3">
         {posts.map((post) => (
           <SocialMediaPost
@@ -65,17 +67,11 @@ interface SocialMediaPostProps {
   onDelete: (id: number) => void;
 }
 
-function SocialMediaPost({
-  post,
-  onFavorite,
-  onDelete,
-  maxHeight = "max-h-[100px]",
-}: SocialMediaPostProps) {
+function SocialMediaPost({ post, onFavorite, onDelete }: SocialMediaPostProps) {
   return (
-    <>
-      {/* <div className="bg-background p-4 rounded-lg"> */}
+    <div className="p-4 rounded-lg grid grid-rows-[24px_200px_40px] border border-border">
       <h3 className="font-semibold">Post {post.id}</h3>
-      <ScrollArea className={`bg-background p-4 rounded-lg ${maxHeight}`}>
+      <ScrollArea className="border border-border p-4 rounded-lg my-4 text-start">
         <p>{post.content}</p>
       </ScrollArea>
       <div className="flex space-x-4 justify-center">
@@ -100,7 +96,6 @@ function SocialMediaPost({
           <Trash2 />
         </Button>
       </div>
-    </>
-    // </div>
+    </div>
   );
 }

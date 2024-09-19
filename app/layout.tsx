@@ -10,12 +10,10 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/nextjs";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Visualize AI",
-  description: "Generate Visualize Value type illustrations for any ideas",
+  title: "Social Media AI Agent",
+  description: "Generate social media content based on your YouTube videos",
 };
 
 function Header() {
@@ -43,24 +41,14 @@ function Header() {
         </SignedIn>
         <SignedOut>
           <SignInButton mode="modal">
-            {/* <button className="text-white border border-white hover:text-white hover:bg-[#2d06ff4a] py-2 px-4 rounded-3xl transition duration-300 ease-in-out">Sign in</button> */}
             <button className="text-primary-foreground border border-white hover:bg-primary hover:border-primary py-2 px-4 rounded-3xl transition duration-300 ease-in-out">
               Sign in
             </button>
-            {/* <Button variant="outline" className="rounded-full hover:bg-primary">
-              Sign in
-            </Button> */}
           </SignInButton>
           <SignUpButton mode="modal">
-            {/* <button className="bg-white py-2 px-4 rounded-3xl transition duration-300 ease-in-out">
-              Sign up
-            </button> */}
             <button className="bg-white text-background py-2 px-4 rounded-3xl transition duration-300 ease-in-out hover:opacity-90">
               Sign up
             </button>
-            {/* <Button variant="secondary" className="rounded-full">
-              Sign up
-            </Button> */}
           </SignUpButton>
         </SignedOut>
       </div>
