@@ -12,8 +12,8 @@ import {
 } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
-  title: "Social Media AI Agent",
-  description: "Generate social media content based on your YouTube videos",
+  title: "Social Media AI Agent Team",
+  description: "Generate posts for your social media",
 };
 
 function Header() {

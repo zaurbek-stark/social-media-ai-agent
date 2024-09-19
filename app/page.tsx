@@ -4,12 +4,10 @@ export default function Home() {
   return (
     <main className="App">
       <div className="container">
-        <div className="logoBox max-w-lg m-auto">
-          <h1 className="text-foreground">Social Media AI Agent</h1>
+        <div className="logoBox max-w-3xl m-auto">
+          <h1 className="text-foreground font-bold">Social Media AI Agent</h1>
           <p className="text-secondary-foreground">
-            Repurpose your YouTube videos into X and LinkedIn posts. Just
-            provide a link to your YouTube video, some sample X and LinkedIn
-            posts for inspiriation, and watch the magic happen!
+            Repurpose your YouTube videos into X and LinkedIn posts.
           </p>
         </div>
         <ContentGenerator />

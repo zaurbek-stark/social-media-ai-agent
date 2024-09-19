@@ -12,26 +12,32 @@ import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import PostContainer from "./PostsScreen";
 import PostsSkeleton from "./PostsSkeleton";
+import { experimental_useObject as useObject } from "ai/react";
+import { postSchema } from "../api/schema/schema";
 
 const ContentGenerator: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [xPosts, setXPosts] = useState("");
   const [linkedInPosts, setLinkedInPosts] = useState("");
-
-  const [error, setError] = useState("");
+  const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
-  const {
-    completion,
-    complete,
-    isLoading,
-    error: completionError,
-  } = useCompletion({
+  // const {
+  //   completion,
+  //   complete,
+  //   isLoading,
+  //   error: completionError,
+  // } = useCompletion({
+  //   api: "/api/generate-tweets",
+  //   onError: (error) => {
+  //     setDisplayError(`An error occurred: ${error.message}`);
+  //   },
+  // });
+
+  const { object, submit, isLoading, error } = useObject({
     api: "/api/generate-tweets",
-    onError: (error) => {
-      setError(`An error occurred: ${error.message}`);
-    },
+    schema: postSchema,
   });
 
   useEffect(() => {
@@ -53,16 +59,16 @@ const ContentGenerator: React.FC = () => {
       return;
     }
 
-    setError("");
+    setDisplayError("");
 
     try {
-      await complete(videoUrl, {
+      await submit({
         body: { videoUrl, exampleTweets: xPosts },
       });
     } catch (error) {
-      setError("There was an error generating content. Please try again.");
-    } finally {
-      console.log(completion);
+      setDisplayError(
+        "There was an error generating content. Please try again."
+      );
     }
   };
 
@@ -72,17 +78,15 @@ const ContentGenerator: React.FC = () => {
 
       {/* <PostsSkeleton /> */}
 
-      {!isLoading && completion && <PostContainer postsRaw={[completion]} />}
+      {!isLoading && object?.posts && (
+        <PostContainer postsRaw={object?.posts} />
+      )}
       {/* <PostContainer postsRaw={[completion]} /> */}
 
       <form onSubmit={onSubmit} className="space-y-4">
-        {!isLoading && !completion && (
+        {!isLoading && !object?.posts && (
           <>
-            <h3 className="text-2xl font-bold mb-6">
-              Drop the link to your YouTube video below
-            </h3>
             <div className="space-y-2 mb-10 text-start">
-              <Label htmlFor="youtube-link">YouTube Video Link:</Label>
               <Input
                 id="youtube-link"
                 type="text"
@@ -93,11 +97,9 @@ const ContentGenerator: React.FC = () => {
               />
             </div>
 
-            <h3 className="text-2xl font-bold mb-6">Add inspiration content</h3>
             <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
             <div className="grid grid-cols-2 space-x-2">
               <div className="text-start">
-                <Label htmlFor="x-posts">X Posts:</Label>
                 <Textarea
                   className="mt-2"
                   id="x-posts"
@@ -109,7 +111,6 @@ const ContentGenerator: React.FC = () => {
                 />
               </div>
               <div className="text-start">
-                <Label htmlFor="linkedin-posts">LinkedIn Posts:</Label>
                 <Textarea
                   className="mt-2"
                   id="linkedin-posts"
@@ -123,25 +124,25 @@ const ContentGenerator: React.FC = () => {
             </div>
           </>
         )}
+
         <Button
           className="w-full bg-primary"
           type="submit"
           disabled={isLoading}
         >
-          <Wand2 className="w-4 h-4 mr-2" />
-          {isLoading ? "Generating content..." : "Start generating"}
+          {isLoading ? (
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
+          ) : (
+            <>
+              <Wand2 className="w-4 h-4 mr-2" />
+              <span>Generate</span>
+            </>
+          )}
         </Button>
       </form>
 
-      {/* {isLoading && (
-        <div className="text-center mb-4">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="mt-2">Generating content...</p>
-        </div>
-      )} */}
-
-      {(error || completionError) && (
-        <p className="text-red-500 mb-4">{error || completionError?.message}</p>
+      {(error || displayError) && (
+        <p className="text-red-500 mb-4">{error?.message || displayError}</p>
       )}
     </div>
   );
