@@ -24,12 +24,13 @@ export default function PostContainer({
 }: PostContainerProps) {
   const [posts, setPosts] = useState<Post[]>(
     postsRaw.map((post, i) => ({
-      // Array.from({ length: 6 }, (_, i) => ({
+      // Array.from({ length: 3 }, (_, i) => ({
       id: i + 1,
       // content: `This is an example post content for post ${
       //   i + 1
       // }. It can be much longer in real scenarios.`,
       content: post?.content,
+      // potential: 8,
       potential: post?.potential,
       isFavorite: false,
     }))
@@ -48,26 +49,26 @@ export default function PostContainer({
   };
 
   return (
-    <div className={`w-full mx-auto text-foreground p-6 ${className}`}>
-      <div className="rounded-lg shadow-lg overflow-hidden grid grid-cols-3 gap-3">
-        {posts.map((post) => {
-          if (
-            post &&
-            typeof post.content === "string" &&
-            typeof post.potential === "number"
-          ) {
-            return (
-              <SocialMediaPost
-                key={post.id}
-                post={post}
-                onFavorite={handleFavorite}
-                onDelete={handleDelete}
-              />
-            );
-          }
-          return null;
-        })}
-      </div>
+    <div
+      className={`w-full text-foreground p-6 rounded-lg shadow-lg overflow-hidden grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-3 ${className}`}
+    >
+      {posts.map((post) => {
+        if (
+          post &&
+          typeof post.content === "string" &&
+          typeof post.potential === "number"
+        ) {
+          return (
+            <SocialMediaPost
+              key={post.id}
+              post={post}
+              onFavorite={handleFavorite}
+              onDelete={handleDelete}
+            />
+          );
+        }
+        return null;
+      })}
     </div>
   );
 }
@@ -88,33 +89,34 @@ interface SocialMediaPostProps {
 
 function SocialMediaPost({ post, onFavorite, onDelete }: SocialMediaPostProps) {
   return (
-    <div className="p-4 rounded-lg grid grid-rows-[24px_200px_40px] border border-border">
-      <h3 className="font-semibold">Post {post.id}</h3>
+    <div className="p-4 rounded-lg grid grid-rows-[1fr_40px] border border-border h-[65vh]">
       <ScrollArea className="border border-border p-4 rounded-lg my-4 text-start">
         <p>{post.content}</p>
       </ScrollArea>
-      <p className="font-semibold">Potential: {post.potential}</p>
-      <div className="flex space-x-4 justify-center">
-        <Button
-          className="hover:bg-primary"
-          variant={post.isFavorite ? "default" : "outline"}
-          size="icon"
-          onClick={() => onFavorite(post.id)}
-          aria-label={
-            post.isFavorite ? "Remove from favorites" : "Add to favorites"
-          }
-        >
-          <Star className={post.isFavorite ? "fill-current" : ""} />
-        </Button>
-        <Button
-          className="hover:bg-destructive"
-          variant="outline"
-          size="icon"
-          onClick={() => onDelete(post.id)}
-          aria-label="Delete post"
-        >
-          <Trash2 />
-        </Button>
+      <div className="flex justify-between items-center">
+        <p className="font-semibold">Viral Potential: {post.potential}/10</p>
+        <div className="flex space-x-4 justify-center">
+          <Button
+            className="hover:bg-primary"
+            variant={post.isFavorite ? "default" : "outline"}
+            size="icon"
+            onClick={() => onFavorite(post.id)}
+            aria-label={
+              post.isFavorite ? "Remove from favorites" : "Add to favorites"
+            }
+          >
+            <Star className={post.isFavorite ? "fill-current" : ""} />
+          </Button>
+          <Button
+            className="hover:bg-destructive"
+            variant="outline"
+            size="icon"
+            onClick={() => onDelete(post.id)}
+            aria-label="Delete post"
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </div>
     </div>
   );

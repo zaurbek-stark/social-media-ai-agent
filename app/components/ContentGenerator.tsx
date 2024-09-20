@@ -73,78 +73,80 @@ const ContentGenerator: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-background rounded-lg shadow-md text-foreground">
-      {isLoading && <PostsSkeleton />}
+    <>
+      <div className="mx-auto max-w-6xl">
+        {isLoading && <PostsSkeleton />}
+        {/* <PostsSkeleton /> */}
 
-      {/* <PostsSkeleton /> */}
-
-      {!isLoading && object?.posts && (
-        <PostContainer postsRaw={object?.posts} />
-      )}
-      {/* <PostContainer postsRaw={[completion]} /> */}
-
-      <form onSubmit={onSubmit} className="space-y-4">
-        {!isLoading && !object?.posts && (
-          <>
-            <div className="space-y-2 mb-10 text-start">
-              <Input
-                id="youtube-link"
-                type="text"
-                placeholder="Enter YouTube video URL..."
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-
-            <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
-            <div className="grid grid-cols-2 space-x-2">
-              <div className="text-start">
-                <Textarea
-                  className="mt-2"
-                  id="x-posts"
-                  placeholder="Paste example X posts here..."
-                  rows={6}
-                  value={xPosts}
-                  onChange={(e) => setXPosts(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="text-start">
-                <Textarea
-                  className="mt-2"
-                  id="linkedin-posts"
-                  placeholder="Paste example LinkedIn posts here..."
-                  rows={6}
-                  value={linkedInPosts}
-                  onChange={(e) => setLinkedInPosts(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-          </>
+        {!isLoading && object?.posts && (
+          <PostContainer postsRaw={object?.posts} />
         )}
-
-        <Button
-          className="w-full bg-primary"
-          type="submit"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
-          ) : (
+        {/* <PostContainer /> */}
+      </div>
+      <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-4xl">
+        <form onSubmit={onSubmit} className="space-y-4">
+          {!isLoading && !object?.posts && (
             <>
-              <Wand2 className="w-4 h-4 mr-2" />
-              <span>Generate</span>
+              <div className="space-y-2 mb-10 text-start">
+                <Input
+                  id="youtube-link"
+                  type="text"
+                  placeholder="Enter YouTube video URL..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
+              <div className="grid sm:grid-cols-2 grid-cols-1 sm:space-x-2">
+                <div className="text-start">
+                  <Textarea
+                    className="mt-2"
+                    id="x-posts"
+                    placeholder="Paste example X posts here..."
+                    rows={6}
+                    value={xPosts}
+                    onChange={(e) => setXPosts(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="text-start">
+                  <Textarea
+                    className="mt-2"
+                    id="linkedin-posts"
+                    placeholder="Paste example LinkedIn posts here..."
+                    rows={6}
+                    value={linkedInPosts}
+                    onChange={(e) => setLinkedInPosts(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
             </>
           )}
-        </Button>
-      </form>
 
-      {(error || displayError) && (
-        <p className="text-red-500 mb-4">{error?.message || displayError}</p>
-      )}
-    </div>
+          <Button
+            className="w-full bg-primary"
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4 mr-2" />
+                <span>Generate X posts</span>
+              </>
+            )}
+          </Button>
+        </form>
+
+        {(error || displayError) && (
+          <p className="text-red-500 mb-4">{error?.message || displayError}</p>
+        )}
+      </div>
+    </>
   );
 };
 
