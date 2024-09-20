@@ -13,11 +13,15 @@ type PostRaw = PartialObject<z.infer<typeof postSchema>["posts"][number]>;
 
 interface PostContainerProps {
   postsRaw: (PostRaw | undefined)[];
+  favouriteXPosts: string[];
+  setFavouriteXPosts: React.Dispatch<React.SetStateAction<string[]>>;
   className?: string;
 }
 
 export default function PostsGrid({
   postsRaw,
+  favouriteXPosts,
+  setFavouriteXPosts,
   className = "",
 }: PostContainerProps) {
   const [posts, setPosts] = useState<PostType[]>(
@@ -35,11 +39,25 @@ export default function PostsGrid({
   );
 
   const handleFavorite = (id: number) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === id ? { ...post, isFavorite: !post.isFavorite } : post
-      )
-    );
+    const [postToSet] = posts.filter((post) => post.id === id);
+
+    if (!postToSet.isFavorite) {
+      setFavouriteXPosts([...favouriteXPosts, postToSet.content ?? ""]);
+      setPosts(
+        posts.map((post) =>
+          post === postToSet ? { ...post, isFavorite: true } : post
+        )
+      );
+    } else {
+      setFavouriteXPosts(
+        favouriteXPosts.filter((post) => post !== postToSet.content)
+      );
+      setPosts(
+        posts.map((post) =>
+          post === postToSet ? { ...post, isFavorite: false } : post
+        )
+      );
+    }
   };
 
   const handleDelete = (id: number) => {

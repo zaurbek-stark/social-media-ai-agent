@@ -16,12 +16,23 @@ const ContentGenerator: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [xPosts, setXPosts] = useState("");
   const [linkedInPosts, setLinkedInPosts] = useState("");
+  const [favouriteXPosts, setFavouriteXPosts] = useState([""]);
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
   const { object, submit, isLoading, error } = useObject({
     api: "/api/generate-tweets",
+    schema: postSchema,
+  });
+
+  const {
+    object: linkedInObject,
+    submit: linkedInSubmit,
+    isLoading: linkedInIsLoading,
+    error: linkedInError,
+  } = useObject({
+    api: "/api/generate-linkedin-posts",
     schema: postSchema,
   });
 
@@ -35,7 +46,7 @@ const ContentGenerator: React.FC = () => {
     }
   }, [user]);
 
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitXPosts = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user) {
@@ -57,17 +68,60 @@ const ContentGenerator: React.FC = () => {
     }
   };
 
+  const onSubmitLinkedInPosts = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+
+    if (!user) {
+      openSignUp();
+      return;
+    }
+
+    setDisplayError("");
+
+    try {
+      await linkedInSubmit({
+        body: {
+          videoUrl,
+          exampleLinkedInPosts: linkedInPosts,
+          selectedTweets: favouriteXPosts,
+        },
+      });
+    } catch (error) {
+      setDisplayError(
+        "There was an error generating content. Please try again."
+      );
+    }
+  };
+
   return (
     <>
       <div className="mx-auto max-w-6xl">
-        {isLoading && <PostsSkeleton />}
+        {(isLoading || linkedInIsLoading) && <PostsSkeleton />}
         {/* <PostsSkeleton /> */}
 
-        {!isLoading && object?.posts && <PostsGrid postsRaw={object?.posts} />}
+        {!isLoading && object?.posts && !linkedInObject?.posts && (
+          <PostsGrid
+            postsRaw={object?.posts}
+            favouriteXPosts={favouriteXPosts}
+            setFavouriteXPosts={setFavouriteXPosts}
+          />
+        )}
+        {!linkedInIsLoading && linkedInObject?.posts && (
+          <PostsGrid
+            postsRaw={linkedInObject?.posts}
+            favouriteXPosts={favouriteXPosts}
+            setFavouriteXPosts={setFavouriteXPosts}
+          />
+        )}
         {/* <PostsGrid /> */}
       </div>
       <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-4xl">
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form
+          onSubmit={!object?.posts ? onSubmitXPosts : onSubmitLinkedInPosts}
+          className="space-y-4"
+        >
           {!isLoading && !object?.posts && (
             <>
               <div className="space-y-2 mb-10 text-start">
@@ -119,14 +173,20 @@ const ContentGenerator: React.FC = () => {
             ) : (
               <>
                 <Wand2 className="w-4 h-4 mr-2" />
-                <span>Generate X posts</span>
+                {!object?.posts ? (
+                  <span>Generate X posts</span>
+                ) : (
+                  <span>Generate LinkedIn posts</span>
+                )}
               </>
             )}
           </Button>
         </form>
 
-        {(error || displayError) && (
-          <p className="text-red-500 mb-4">{error?.message || displayError}</p>
+        {(error || linkedInError || displayError) && (
+          <p className="text-red-500 mb-4">
+            {error?.message || linkedInError?.message || displayError}
+          </p>
         )}
       </div>
     </>
