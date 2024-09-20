@@ -36,8 +36,8 @@ const SocialPreview: React.FC<SocialPreviewProps> = ({ posts }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [activePost, setActivePost] = useState("");
 
-  const openModal = (post: string) => {
-    setActivePost(post);
+  const openModal = (post?: string) => {
+    setActivePost(post ?? "");
     setModalOpen(true);
   };
 
@@ -59,12 +59,14 @@ const SocialPreview: React.FC<SocialPreviewProps> = ({ posts }) => {
               className="relative border-dashed border-2 border-gray-300 rounded-lg shadow-lg transition-shadow hover:shadow-xl aspect-w-1 aspect-h-1 w-full h-[260px] sm:w-[30%] max-w-xs overflow-hidden"
             >
               <div
-                onClick={() => openModal(post.content)}
+                onClick={() => openModal(post?.content)}
                 className="p-4 cursor-pointer h-full overflow-auto"
               >
                 <p className="font-semibold mb-2">Content:</p>
                 <p className="mb-4">{post.content}</p>
-                <p className="font-semibold">Potential: {post.potential}</p>
+                <p className="font-semibold font-orange-300 mb-3">
+                  Viral Potential: {post.potential}/10
+                </p>
               </div>
             </div>
           );

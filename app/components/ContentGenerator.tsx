@@ -2,10 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
-import SocialPreview from "./SocialPreview";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
-import { useCompletion } from "ai/react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -22,18 +19,6 @@ const ContentGenerator: React.FC = () => {
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-
-  // const {
-  //   completion,
-  //   complete,
-  //   isLoading,
-  //   error: completionError,
-  // } = useCompletion({
-  //   api: "/api/generate-tweets",
-  //   onError: (error) => {
-  //     setDisplayError(`An error occurred: ${error.message}`);
-  //   },
-  // });
 
   const { object, submit, isLoading, error } = useObject({
     api: "/api/generate-tweets",
@@ -73,15 +58,14 @@ const ContentGenerator: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-background rounded-lg shadow-md text-foreground">
+    <div
+      className="max-w-3xl mx-auto py-7 bg-background rounded-lg shadow-md text-foreground flex flex-col justify-between h-[95%]
+"
+    >
       {isLoading && <PostsSkeleton />}
-
-      {/* <PostsSkeleton /> */}
-
       {!isLoading && object?.posts && (
         <PostContainer postsRaw={object?.posts} />
       )}
-      {/* <PostContainer postsRaw={[completion]} /> */}
 
       <form onSubmit={onSubmit} className="space-y-4">
         {!isLoading && !object?.posts && (

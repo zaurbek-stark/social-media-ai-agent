@@ -48,7 +48,7 @@ export default function PostContainer({
   };
 
   return (
-    <div className={`w-full mx-auto text-foreground p-6 ${className}`}>
+    <div className={`w-full mx-auto text-foreground ${className}`}>
       <div className="rounded-lg shadow-lg overflow-hidden grid grid-cols-3 gap-3">
         {posts.map((post) => {
           if (
@@ -88,12 +88,11 @@ interface SocialMediaPostProps {
 
 function SocialMediaPost({ post, onFavorite, onDelete }: SocialMediaPostProps) {
   return (
-    <div className="p-4 rounded-lg grid grid-rows-[24px_200px_40px] border border-border">
-      <h3 className="font-semibold">Post {post.id}</h3>
-      <ScrollArea className="border border-border p-4 rounded-lg my-4 text-start">
-        <p>{post.content}</p>
+    <div className="flex flex-col rounded-lg">
+      <ScrollArea className="h-full border border-border p-4 rounded-lg my-4 text-start">
+        <p className="whitespace-pre-wrap">{post.content}</p>
       </ScrollArea>
-      <p className="font-semibold">Potential: {post.potential}</p>
+      <p className="font-semibold mb-3">Viral Potential: {post.potential}/10</p>
       <div className="flex space-x-4 justify-center">
         <Button
           className="hover:bg-primary"
