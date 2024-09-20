@@ -2,15 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
-import SocialPreview from "./SocialPreview";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
-import { useCompletion } from "ai/react";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
-import PostContainer from "./PostsScreen";
+import PostsGrid from "./PostsGrid";
 import PostsSkeleton from "./PostsSkeleton";
 import { experimental_useObject as useObject } from "ai/react";
 import { postSchema } from "../api/schema/schema";
@@ -22,18 +19,6 @@ const ContentGenerator: React.FC = () => {
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
-
-  // const {
-  //   completion,
-  //   complete,
-  //   isLoading,
-  //   error: completionError,
-  // } = useCompletion({
-  //   api: "/api/generate-tweets",
-  //   onError: (error) => {
-  //     setDisplayError(`An error occurred: ${error.message}`);
-  //   },
-  // });
 
   const { object, submit, isLoading, error } = useObject({
     api: "/api/generate-tweets",
@@ -78,10 +63,8 @@ const ContentGenerator: React.FC = () => {
         {isLoading && <PostsSkeleton />}
         {/* <PostsSkeleton /> */}
 
-        {!isLoading && object?.posts && (
-          <PostContainer postsRaw={object?.posts} />
-        )}
-        {/* <PostContainer /> */}
+        {!isLoading && object?.posts && <PostsGrid postsRaw={object?.posts} />}
+        {/* <PostsGrid /> */}
       </div>
       <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-4xl">
         <form onSubmit={onSubmit} className="space-y-4">
@@ -102,10 +85,10 @@ const ContentGenerator: React.FC = () => {
               <div className="grid sm:grid-cols-2 grid-cols-1 sm:space-x-2">
                 <div className="text-start">
                   <Textarea
-                    className="mt-2"
+                    className="mt-2 resize-none"
                     id="x-posts"
                     placeholder="Paste example X posts here..."
-                    rows={6}
+                    rows={20}
                     value={xPosts}
                     onChange={(e) => setXPosts(e.target.value)}
                     disabled={isLoading}
@@ -113,10 +96,10 @@ const ContentGenerator: React.FC = () => {
                 </div>
                 <div className="text-start">
                   <Textarea
-                    className="mt-2"
+                    className="mt-2 resize-none"
                     id="linkedin-posts"
                     placeholder="Paste example LinkedIn posts here..."
-                    rows={6}
+                    rows={20}
                     value={linkedInPosts}
                     onChange={(e) => setLinkedInPosts(e.target.value)}
                     disabled={isLoading}
