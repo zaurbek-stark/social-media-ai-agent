@@ -24,7 +24,7 @@ export default function Post({
   return (
     <div className="p-4 rounded-lg grid grid-rows-[1fr_40px] border border-border h-[65vh]">
       <ScrollArea className="border border-border p-4 rounded-lg my-4 text-start">
-        <p>{post.content}</p>
+        <p className="whitespace-pre-wrap">{post.content}</p>
       </ScrollArea>
       <div className="flex justify-between items-center">
         <p className="font-semibold">Viral Potential: {post.potential}/10</p>
