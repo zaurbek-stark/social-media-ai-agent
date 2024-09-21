@@ -101,13 +101,16 @@ const ContentGenerator: React.FC = () => {
         {(isLoading || linkedInIsLoading) && <PostsSkeleton />}
         {/* <PostsSkeleton /> */}
 
-        {!isLoading && object?.posts && !linkedInObject?.posts && (
-          <PostsGrid
-            postsRaw={object?.posts}
-            favouriteXPosts={favouriteXPosts}
-            setFavouriteXPosts={setFavouriteXPosts}
-          />
-        )}
+        {!isLoading &&
+          object?.posts &&
+          !linkedInIsLoading &&
+          !linkedInObject?.posts && (
+            <PostsGrid
+              postsRaw={object?.posts}
+              favouriteXPosts={favouriteXPosts}
+              setFavouriteXPosts={setFavouriteXPosts}
+            />
+          )}
         {!linkedInIsLoading && linkedInObject?.posts && (
           <PostsGrid
             postsRaw={linkedInObject?.posts}
@@ -163,24 +166,26 @@ const ContentGenerator: React.FC = () => {
             </>
           )}
 
-          <Button
-            className="w-full bg-primary"
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4 mr-2" />
-                {!object?.posts ? (
-                  <span>Generate X posts</span>
-                ) : (
-                  <span>Generate LinkedIn posts</span>
-                )}
-              </>
-            )}
-          </Button>
+          {!linkedInObject?.posts && (
+            <Button
+              className="w-full bg-primary"
+              type="submit"
+              disabled={isLoading || linkedInIsLoading}
+            >
+              {isLoading || linkedInIsLoading ? (
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  {!object?.posts ? (
+                    <span>Generate X posts</span>
+                  ) : (
+                    <span>Generate LinkedIn posts</span>
+                  )}
+                </>
+              )}
+            </Button>
+          )}
         </form>
 
         {(error || linkedInError || displayError) && (
