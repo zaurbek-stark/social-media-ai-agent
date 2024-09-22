@@ -9,7 +9,7 @@ export default function Home() {
             Social Media AI Agent
           </h1>
           <p className="text-secondary-foreground">
-            Repurpose your YouTube videos into X and LinkedIn posts.
+            Repurpose your YouTube videos into 𝕏 and LinkedIn posts.
           </p>
         </div>
         <ContentGenerator />
