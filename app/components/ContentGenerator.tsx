@@ -11,6 +11,57 @@ import PostsGrid from "./PostsGrid";
 import PostsSkeleton from "./PostsSkeleton";
 import { experimental_useObject as useObject } from "ai/react";
 import { postSchema } from "../api/schema/schema";
+import { z } from "zod";
+
+type PartialObject<T> = {
+  [P in keyof T]?: T[P] | undefined;
+};
+
+type PostRaw = PartialObject<z.infer<typeof postSchema>["posts"][number]>;
+
+interface RenderPostsProps {
+  isLoading: boolean;
+  linkedInIsLoading: boolean;
+  twitterPosts?: (PostRaw | undefined)[];
+  linkedInPosts?: (PostRaw | undefined)[];
+  favouriteXPosts: string[];
+  setFavouriteXPosts: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
+const RenderPosts: React.FC<RenderPostsProps> = ({
+  isLoading,
+  linkedInIsLoading,
+  twitterPosts,
+  linkedInPosts,
+  favouriteXPosts,
+  setFavouriteXPosts,
+}) => {
+  if (isLoading || linkedInIsLoading) {
+    return <PostsSkeleton />;
+  }
+
+  if (linkedInPosts) {
+    return (
+      <PostsGrid
+        postsRaw={linkedInPosts}
+        favouriteXPosts={favouriteXPosts}
+        setFavouriteXPosts={setFavouriteXPosts}
+      />
+    );
+  }
+
+  if (twitterPosts) {
+    return (
+      <PostsGrid
+        postsRaw={twitterPosts}
+        favouriteXPosts={favouriteXPosts}
+        setFavouriteXPosts={setFavouriteXPosts}
+      />
+    );
+  }
+
+  return null;
+};
 
 const ContentGenerator: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState("");
@@ -21,7 +72,12 @@ const ContentGenerator: React.FC = () => {
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
-  const { object, submit, isLoading, error } = useObject({
+  const {
+    object: tweetsObject,
+    submit,
+    isLoading,
+    error,
+  } = useObject({
     api: "/api/generate-tweets",
     schema: postSchema,
   });
@@ -98,34 +154,23 @@ const ContentGenerator: React.FC = () => {
   return (
     <>
       <div className="mx-auto max-w-6xl">
-        {(isLoading || linkedInIsLoading) && <PostsSkeleton />}
-        {/* <PostsSkeleton /> */}
-
-        {!isLoading &&
-          object?.posts &&
-          !linkedInIsLoading &&
-          !linkedInObject?.posts && (
-            <PostsGrid
-              postsRaw={object?.posts}
-              favouriteXPosts={favouriteXPosts}
-              setFavouriteXPosts={setFavouriteXPosts}
-            />
-          )}
-        {!linkedInIsLoading && linkedInObject?.posts && (
-          <PostsGrid
-            postsRaw={linkedInObject?.posts}
-            favouriteXPosts={favouriteXPosts}
-            setFavouriteXPosts={setFavouriteXPosts}
-          />
-        )}
-        {/* <PostsGrid /> */}
+        <RenderPosts
+          isLoading={isLoading}
+          linkedInIsLoading={linkedInIsLoading}
+          twitterPosts={tweetsObject?.posts}
+          linkedInPosts={linkedInObject?.posts}
+          favouriteXPosts={favouriteXPosts}
+          setFavouriteXPosts={setFavouriteXPosts}
+        />
       </div>
       <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-4xl">
         <form
-          onSubmit={!object?.posts ? onSubmitXPosts : onSubmitLinkedInPosts}
+          onSubmit={
+            !tweetsObject?.posts ? onSubmitXPosts : onSubmitLinkedInPosts
+          }
           className="space-y-4"
         >
-          {!isLoading && !object?.posts && (
+          {!isLoading && !tweetsObject?.posts && (
             <>
               <div className="space-y-2 mb-10 text-start">
                 <Input
@@ -138,13 +183,13 @@ const ContentGenerator: React.FC = () => {
                 />
               </div>
 
-              <p>Paste sample posts from X and LinkedIn to help guide the AI</p>
+              <p>Paste sample posts from 𝕏 and LinkedIn to help guide the AI</p>
               <div className="grid sm:grid-cols-2 grid-cols-1 sm:space-x-2">
                 <div className="text-start">
                   <Textarea
                     className="mt-2 resize-none"
                     id="x-posts"
-                    placeholder="Paste example X posts here..."
+                    placeholder="Paste example 𝕏 posts here..."
                     rows={20}
                     value={xPosts}
                     onChange={(e) => setXPosts(e.target.value)}
@@ -177,8 +222,8 @@ const ContentGenerator: React.FC = () => {
               ) : (
                 <>
                   <Wand2 className="w-4 h-4 mr-2" />
-                  {!object?.posts ? (
-                    <span>Generate X posts</span>
+                  {!tweetsObject?.posts ? (
+                    <span>Generate 𝕏 posts</span>
                   ) : (
                     <span>Generate LinkedIn posts</span>
                   )}
