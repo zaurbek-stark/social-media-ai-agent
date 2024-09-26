@@ -30,17 +30,42 @@ export async function POST(req: Request) {
 
     const { transcript } = await transcriptRes.json();
 
-    const prompt = `Generate a series of short posts based on the following transcript and examples.
-    Rules:
-    - Start with a strong hook.
-    - Don't use emojis.
-    - Limit it to one sentence per line.
-    - Have line breaks between each line.
+    const prompt = `Generate 6 posts based on the following rules, transcript, and examples.
+-------
+RULES:
+- Maximum 280 characters in length.
+- Start with a strong and concise hook.
+- Don't use emojis.
+- Limit it to one sentence per line.
+- Have line breaks between each line.
 
-    Transcript: ${transcript}
-    Examples: ${JSON.stringify(exampleTweets)}
-    
-    Assistant: `;
+-------
+HOOK:
+- The post has to start with a strong and concise hook sentence.
+- Use one of the hook formulas below:
+  1. "Never [ACTION] Do This Instead"
+  2. "I Tested [NUMBER] Years Of [SUBJECT]"
+  3. "I Survived [TIME] With [PERSON/SITUATION]"
+  4. "I Tried Every [SUBJECT]"
+  5. "The [SUBJECT] Tier List"
+  6. "[SUBJECT] You Won't Believe Exist"
+  7. "[LOW PRICE] VS [HIGH PRICE] [SUBJECT]"
+  8. "Don't Buy [SUBJECT] Until [CONDITION]"
+  9. "[NUMBER] Things I Wish I Knew [SUBJECT]"
+  10. "If you're [CONDITION], read this."
+  11. "I Asked 100 [SUBJECT] [QUESTION]"
+  12. Controversial statement (e.g. "Nobody cares about your [SUBJECT]")
+
+-------
+TRANSCRIPT:
+${transcript}
+
+-------
+EXAMPLE POSTS:
+${JSON.stringify(exampleTweets)}
+
+-------
+Assistant: `;
 
     const result = await streamObject({
       model: anthropic("claude-3-opus-20240229"),
