@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import PostsGrid from "./PostsGrid";
@@ -21,41 +20,27 @@ type PostRaw = PartialObject<z.infer<typeof postSchema>["posts"][number]>;
 
 interface RenderPostsProps {
   isLoading: boolean;
-  linkedInIsLoading: boolean;
-  twitterPosts?: (PostRaw | undefined)[];
-  linkedInPosts?: (PostRaw | undefined)[];
-  favouriteXPosts: string[];
-  setFavouriteXPosts: React.Dispatch<React.SetStateAction<string[]>>;
+  posts?: (PostRaw | undefined)[];
+  favouritePosts: string[];
+  setFavouritePosts: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const RenderPosts: React.FC<RenderPostsProps> = ({
   isLoading,
-  linkedInIsLoading,
-  twitterPosts,
-  linkedInPosts,
-  favouriteXPosts,
-  setFavouriteXPosts,
+  posts,
+  favouritePosts,
+  setFavouritePosts,
 }) => {
-  if (isLoading || linkedInIsLoading) {
+  if (isLoading) {
     return <PostsSkeleton />;
   }
 
-  if (linkedInPosts) {
+  if (posts) {
     return (
       <PostsGrid
-        postsRaw={linkedInPosts}
-        favouriteXPosts={favouriteXPosts}
-        setFavouriteXPosts={setFavouriteXPosts}
-      />
-    );
-  }
-
-  if (twitterPosts) {
-    return (
-      <PostsGrid
-        postsRaw={twitterPosts}
-        favouriteXPosts={favouriteXPosts}
-        setFavouriteXPosts={setFavouriteXPosts}
+        postsRaw={posts}
+        favouriteXPosts={favouritePosts}
+        setFavouriteXPosts={setFavouritePosts}
       />
     );
   }
@@ -65,32 +50,22 @@ const RenderPosts: React.FC<RenderPostsProps> = ({
 
 const ContentGenerator: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState("");
-  const [xPosts, setXPosts] = useState("");
-  const [linkedInPosts, setLinkedInPosts] = useState("");
-  const [favouriteXPosts, setFavouriteXPosts] = useState([""]);
+  const [videoId, setVideoId] = useState("");
+  const [favouritePosts, setFavouritePosts] = useState([""]);
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
   const {
-    object: tweetsObject,
+    object: linkedInObject,
     submit,
     isLoading,
     error,
   } = useObject({
-    api: "/api/generate-tweets",
+    api: "/api/generate-posts",
     schema: postSchema,
   });
-
-  const {
-    object: linkedInObject,
-    submit: linkedInSubmit,
-    isLoading: linkedInIsLoading,
-    error: linkedInError,
-  } = useObject({
-    api: "/api/generate-linkedin-posts",
-    schema: postSchema,
-  });
+  console.log("🚀 ~ linkedInObject:", linkedInObject);
 
   useEffect(() => {
     if (user) {
@@ -102,7 +77,20 @@ const ContentGenerator: React.FC = () => {
     }
   }, [user]);
 
-  const onSubmitXPosts = async (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    // Extract video ID from YouTube URL
+    const extractVideoId = (url: string) => {
+      const regExp =
+        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return match && match[2].length === 11 ? match[2] : null;
+    };
+
+    const id = extractVideoId(videoUrl);
+    setVideoId(id || "");
+  }, [videoUrl]);
+
+  const onSubmitPosts = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user) {
@@ -115,34 +103,7 @@ const ContentGenerator: React.FC = () => {
 
     try {
       await submit({
-        body: { videoUrl, exampleTweets: xPosts },
-      });
-    } catch (error) {
-      setDisplayError(
-        "There was an error generating content. Please try again."
-      );
-    }
-  };
-
-  const onSubmitLinkedInPosts = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
-    if (!user) {
-      openSignUp();
-      return;
-    }
-
-    setDisplayError("");
-
-    try {
-      await linkedInSubmit({
-        body: {
-          videoUrl,
-          exampleLinkedInPosts: linkedInPosts,
-          selectedTweets: favouriteXPosts,
-        },
+        body: { videoUrl, selectedPosts: favouritePosts },
       });
     } catch (error) {
       setDisplayError(
@@ -156,23 +117,16 @@ const ContentGenerator: React.FC = () => {
       <div className="mx-auto max-w-6xl">
         <RenderPosts
           isLoading={isLoading}
-          linkedInIsLoading={linkedInIsLoading}
-          twitterPosts={tweetsObject?.posts}
-          linkedInPosts={linkedInObject?.posts}
-          favouriteXPosts={favouriteXPosts}
-          setFavouriteXPosts={setFavouriteXPosts}
+          posts={linkedInObject?.posts}
+          favouritePosts={favouritePosts}
+          setFavouritePosts={setFavouritePosts}
         />
       </div>
-      <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-4xl">
-        <form
-          onSubmit={
-            !tweetsObject?.posts ? onSubmitXPosts : onSubmitLinkedInPosts
-          }
-          className="space-y-4"
-        >
-          {!isLoading && !tweetsObject?.posts && (
+      <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-[560px]">
+        <form onSubmit={onSubmitPosts}>
+          {!isLoading && !linkedInObject?.posts && (
             <>
-              <div className="space-y-2 mb-10 text-start">
+              <div className="mb-5 text-start">
                 <Input
                   id="youtube-link"
                   type="text"
@@ -182,61 +136,41 @@ const ContentGenerator: React.FC = () => {
                   disabled={isLoading}
                 />
               </div>
-
-              <p>Paste sample posts from 𝕏 and LinkedIn to help guide the AI</p>
-              <div className="grid sm:grid-cols-2 grid-cols-1 sm:space-x-2">
-                <div className="text-start">
-                  <Textarea
-                    className="mt-2 resize-none"
-                    id="x-posts"
-                    placeholder="Paste example 𝕏 posts here..."
-                    rows={20}
-                    value={xPosts}
-                    onChange={(e) => setXPosts(e.target.value)}
-                    disabled={isLoading}
-                  />
+              {videoId && (
+                <div className="mb-5">
+                  <iframe
+                    width="100%"
+                    height="315"
+                    src={`https://www.youtube.com/embed/${videoId}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  ></iframe>
                 </div>
-                <div className="text-start">
-                  <Textarea
-                    className="mt-2 resize-none"
-                    id="linkedin-posts"
-                    placeholder="Paste example LinkedIn posts here..."
-                    rows={20}
-                    value={linkedInPosts}
-                    onChange={(e) => setLinkedInPosts(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
+              )}
             </>
           )}
 
-          {!linkedInObject?.posts && (
-            <Button
-              className="w-full bg-primary"
-              type="submit"
-              disabled={isLoading || linkedInIsLoading}
-            >
-              {isLoading || linkedInIsLoading ? (
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  {!tweetsObject?.posts ? (
-                    <span>Generate 𝕏 posts</span>
-                  ) : (
-                    <span>Generate LinkedIn posts</span>
-                  )}
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            className="w-full bg-primary"
+            type="submit"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-foreground"></div>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4 mr-2" />
+                <span>Generate posts</span>
+              </>
+            )}
+          </Button>
         </form>
 
-        {(error || linkedInError || displayError) && (
-          <p className="text-red-500 mb-4">
-            {error?.message || linkedInError?.message || displayError}
-          </p>
+        {(error || displayError) && (
+          <p className="text-red-500 mb-4">{error?.message || displayError}</p>
         )}
       </div>
     </>

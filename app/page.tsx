@@ -3,16 +3,19 @@ import ContentGenerator from "./components/ContentGenerator";
 export default function Home() {
   return (
     <main className="App">
-      <div className="container">
-        <div className="logoBox max-w-3xl m-auto">
-          <h1 className="text-foreground font-bold sm:text-5xl sm:mb-4 mb-2 text-4xl">
-            Social Media AI Agent
-          </h1>
-          <p className="text-secondary-foreground">
-            Repurpose your YouTube videos into 𝕏 and LinkedIn posts.
-          </p>
+      <div className="container flex flex-col justify-center">
+        <div>
+          <div className="logoBox max-w-3xl m-auto">
+            <h1 className="text-foreground font-bold sm:text-5xl sm:mb-4 mb-2 text-4xl">
+              Hormozi AI Agent
+            </h1>
+            <p className="text-secondary-foreground">
+              Repurpose your YouTube videos into LinkedIn posts in the style of
+              Alex Hormozi.
+            </p>
+          </div>
+          <ContentGenerator />
         </div>
-        <ContentGenerator />
       </div>
     </main>
   );

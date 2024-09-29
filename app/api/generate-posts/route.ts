@@ -1,0 +1,100 @@
+import { NextResponse } from "next/server";
+import { anthropic } from "@ai-sdk/anthropic";
+import { streamObject } from "ai";
+import { postSchema } from "../schema/schema";
+import { HormoziHooks, HormoziOutlierTweets } from "../../data/hormozi";
+
+export const runtime = "edge";
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+export async function POST(req: Request) {
+  try {
+    const context = await req.json();
+    const { videoUrl, selectedPosts } = context.body;
+
+    const protocol = req.headers.get("x-forwarded-proto") || "http";
+    const host = req.headers.get("host") || "localhost:3000";
+    const baseUrl = `${protocol}://${host}`;
+
+    // Fetch transcript
+    const transcriptRes = await fetch(
+      `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
+    );
+
+    if (!transcriptRes.ok) {
+      throw new Error(
+        `Failed to fetch transcript: ${transcriptRes.statusText}`
+      );
+    }
+
+    const { transcript } = await transcriptRes.json();
+    console.log("🚀 ~ POST ~ transcript:", transcript);
+
+    // Shuffle the arrays before using them
+    const shuffledHooks = shuffleArray(HormoziHooks).join("\n* ");
+    const shuffledTweets = shuffleArray(HormoziOutlierTweets).join(
+      "\n\n****\nNEW EXAMPLE:\n\n"
+    );
+    console.log("🚀 ~ POST ~ shuffledTweets:", shuffledTweets);
+
+    const prompt = `I will give you a video source transcript. Generate 9 posts based on the following rules and post examples.
+-------
+## RULES:
+- Start with a strong and concise hook.
+- Don't use emojis.
+- Limit it to one sentence per line.
+- Have a LINE BREAK between each line (i.e. there SHOULD always be an empty line between each lines).
+- For each post you generate, use the most fitting HOOK and EXAMPLE POST from the list below as inspiration.
+
+-------
+## HOOKS:
+The post has to start with a strong and concise hook sentence. Use one of these hook formulas:
+${shuffledHooks}
+
+${
+  selectedPosts &&
+  `-------
+## SELECTED POSTS:
+${selectedPosts}`
+}
+
+-------
+## EXAMPLE POSTS:
+The post should have one sentence per line and LINE BREAKS between each lines, like the posts below.
+You can use these posts as inspiration for the WRITTING STYLE only (don't copy the content):
+
+${shuffledTweets}
+
+-------
+## SOURCE TRANSCRIPT:
+${transcript}
+
+-------
+Assistant: `;
+
+    const result = await streamObject({
+      model: anthropic("claude-3-opus-20240229"),
+      schema: postSchema,
+      prompt: prompt,
+    });
+
+    return result.toTextStreamResponse();
+  } catch (error) {
+    console.error("Error in generate-tweets API:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
