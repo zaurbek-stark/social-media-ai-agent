@@ -7,7 +7,7 @@ import { HormoziHooks, HormoziOutlierTweets } from "../../data/hormozi";
 export const runtime = "edge";
 
 // Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// export const maxDuration = 30;
 
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -84,7 +84,7 @@ ${transcript}
 Assistant: `;
 
     const result = await streamObject({
-      model: anthropic("claude-3-opus-20240229"),
+      model: anthropic("claude-3-5-sonnet-20240620"),
       schema: postSchema,
       prompt: prompt,
     });

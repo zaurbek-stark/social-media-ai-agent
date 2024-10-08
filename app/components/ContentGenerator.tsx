@@ -31,7 +31,7 @@ const RenderPosts: React.FC<RenderPostsProps> = ({
   favouritePosts,
   setFavouritePosts,
 }) => {
-  if (isLoading) {
+  if (isLoading && !posts) {
     return <PostsSkeleton />;
   }
 
@@ -65,7 +65,6 @@ const ContentGenerator: React.FC = () => {
     api: "/api/generate-posts",
     schema: postSchema,
   });
-  console.log("🚀 ~ linkedInObject:", linkedInObject);
 
   useEffect(() => {
     if (user) {
