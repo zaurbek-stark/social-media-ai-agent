@@ -45,11 +45,6 @@ function Header() {
               Sign in
             </button>
           </SignInButton>
-          <SignUpButton mode="modal">
-            <button className="bg-white text-background py-2 px-4 rounded-3xl transition duration-300 ease-in-out hover:opacity-90">
-              Sign up
-            </button>
-          </SignUpButton>
         </SignedOut>
       </div>
     </header>

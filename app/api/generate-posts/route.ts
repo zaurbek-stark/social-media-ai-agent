@@ -21,25 +21,11 @@ function shuffleArray<T>(array: T[]): T[] {
 export async function POST(req: Request) {
   try {
     const context = await req.json();
-    const { videoUrl, selectedPosts } = context.body;
+    const { userInput, selectedPosts } = context.body;
 
     const protocol = req.headers.get("x-forwarded-proto") || "http";
     const host = req.headers.get("host") || "localhost:3000";
     const baseUrl = `${protocol}://${host}`;
-
-    // Fetch transcript
-    const transcriptRes = await fetch(
-      `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
-    );
-
-    if (!transcriptRes.ok) {
-      throw new Error(
-        `Failed to fetch transcript: ${transcriptRes.statusText}`
-      );
-    }
-
-    const { transcript } = await transcriptRes.json();
-    console.log("🚀 ~ POST ~ transcript:", transcript);
 
     // Shuffle the arrays before using them
     const shuffledHooks = shuffleArray(HormoziHooks).join("\n* ");
@@ -48,7 +34,7 @@ export async function POST(req: Request) {
     );
     console.log("🚀 ~ POST ~ shuffledTweets:", shuffledTweets);
 
-    const prompt = `I will give you a video source transcript. Generate 9 posts based on the following rules and post examples.
+    const prompt = `I will give you a topic. Generate 9 posts based on the following rules and post examples.
 -------
 ## RULES:
 - Start with a strong and concise hook.
@@ -77,8 +63,8 @@ You can use these posts as inspiration for the WRITTING STYLE only (don't copy t
 ${shuffledTweets}
 
 -------
-## SOURCE TRANSCRIPT:
-${transcript}
+## SOURCE TOPIC:
+${userInput}
 
 -------
 Assistant: `;

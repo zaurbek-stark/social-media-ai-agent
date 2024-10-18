@@ -49,8 +49,7 @@ const RenderPosts: React.FC<RenderPostsProps> = ({
 };
 
 const ContentGenerator: React.FC = () => {
-  const [videoUrl, setVideoUrl] = useState("");
-  const [videoId, setVideoId] = useState("");
+  const [userInput, setUserInput] = useState("");
   const [favouritePosts, setFavouritePosts] = useState([""]);
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
@@ -70,30 +69,17 @@ const ContentGenerator: React.FC = () => {
     if (user) {
       const savedInput = localStorage.getItem("lastInput");
       if (savedInput) {
-        setVideoUrl(savedInput);
+        setUserInput(savedInput);
         localStorage.removeItem("lastInput");
       }
     }
   }, [user]);
 
-  useEffect(() => {
-    // Extract video ID from YouTube URL
-    const extractVideoId = (url: string) => {
-      const regExp =
-        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = url.match(regExp);
-      return match && match[2].length === 11 ? match[2] : null;
-    };
-
-    const id = extractVideoId(videoUrl);
-    setVideoId(id || "");
-  }, [videoUrl]);
-
   const onSubmitPosts = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user) {
-      localStorage.setItem("lastInput", videoUrl);
+      localStorage.setItem("lastInput", userInput);
       openSignUp();
       return;
     }
@@ -102,7 +88,7 @@ const ContentGenerator: React.FC = () => {
 
     try {
       await submit({
-        body: { videoUrl, selectedPosts: favouritePosts },
+        body: { userInput, selectedPosts: favouritePosts },
       });
     } catch (error) {
       setDisplayError(
@@ -124,32 +110,16 @@ const ContentGenerator: React.FC = () => {
       <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-[560px]">
         <form onSubmit={onSubmitPosts}>
           {!isLoading && !linkedInObject?.posts && (
-            <>
-              <div className="mb-5 text-start">
-                <Input
-                  id="youtube-link"
-                  type="text"
-                  placeholder="Enter YouTube video URL..."
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              {videoId && (
-                <div className="mb-5">
-                  <iframe
-                    width="100%"
-                    height="315"
-                    src={`https://www.youtube.com/embed/${videoId}`}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              )}
-            </>
+            <div className="mb-5 text-start">
+              <Input
+                id="user-input"
+                type="text"
+                placeholder="Enter your topic..."
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
           )}
 
           <Button

@@ -292,21 +292,22 @@ h1 {
 /* width */
 ::-webkit-scrollbar {
   width: 10px;
+  transition: all 0.3s;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #888;
+  background: transparent;
   border-radius: 5px;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #000;
+  background: hsl(215 27.9% 16.9%);
   border-radius: 5px;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  /* background: #555; */
 }

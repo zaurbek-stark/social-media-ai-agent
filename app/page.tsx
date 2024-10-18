@@ -10,8 +10,7 @@ export default function Home() {
               Hormozi AI Agent
             </h1>
             <p className="text-secondary-foreground">
-              Repurpose your YouTube videos into LinkedIn posts in the style of
-              Alex Hormozi.
+              Generate LinkedIn posts in the style of Alex Hormozi.
             </p>
           </div>
           <ContentGenerator />
