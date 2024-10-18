@@ -10,7 +10,7 @@ const redis = new Redis({
 
 const ratelimit = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(30, "86400 s"), // 3 requests per day
+  limiter: Ratelimit.slidingWindow(6, "86400 s"), // 6 requests per day
   ephemeralCache: new Map(),
   analytics: true,
 });
@@ -33,7 +33,7 @@ export default clerkMiddleware(
         ? NextResponse.next()
         : NextResponse.json({
             message:
-              "Sorry you can only generate 3 free visuals per day. Reach out to @ZaurbekStark on 𝕏 for more.",
+              "Sorry you can only generate 6 free batches of posts per day. Reach out to @ZaurbekStark on 𝕏 for more.",
           });
 
       res.headers.set("X-RateLimit-Limit", limit.toString());

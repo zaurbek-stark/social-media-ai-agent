@@ -3,14 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { getAssetPrompt } from "../utils/getAssetPrompt";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import PostsGrid from "./PostsGrid";
 import PostsSkeleton from "./PostsSkeleton";
-import { useChat, experimental_useObject as useObject } from "ai/react";
+import { experimental_useObject as useObject } from "ai/react";
 import { postSchema } from "../api/schema/schema";
 import { z } from "zod";
-import { Textarea } from "@/components/ui/textarea";
 
 type PartialObject<T> = {
   [P in keyof T]?: T[P] | undefined;
@@ -48,53 +48,52 @@ const RenderPosts: React.FC<RenderPostsProps> = ({
   return null;
 };
 
-const ContentGenerator: React.FC = () => {
-  const [userInput, setUserInput] = useState("");
-  const [posts, setPosts] = useState();
+const HormoziContentGenerator: React.FC = () => {
+  const [videoUrl, setVideoUrl] = useState("");
+  const [videoId, setVideoId] = useState("");
   const [favouritePosts, setFavouritePosts] = useState([""]);
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
 
-  const { handleSubmit, isLoading, error } = useChat({
-    api: "/api/generate-posts",
-    onFinish: (message) => {
-      // parse message into posts array
-      const parsedMessage = message.content;
-      console.log(parsedMessage);
-      // setPosts(parsedMessage)
-
-      setDisplayError("");
-    },
-    onError: (error) => {
-      setDisplayError(`An error occured calling the API: ${error}`);
-    },
+  const {
+    object: linkedInObject,
+    submit,
+    isLoading,
+    error,
+  } = useObject({
+    api: "/api/generate-posts-youtube",
+    schema: postSchema,
   });
-  // const {
-  //   object: linkedInObject,
-  //   submit,
-  //   isLoading,
-  //   error,
-  // } = useObject({
-  //   api: "/api/generate-posts",
-  //   schema: postSchema,
-  // });
 
   useEffect(() => {
     if (user) {
       const savedInput = localStorage.getItem("lastInput");
       if (savedInput) {
-        setUserInput(savedInput);
+        setVideoUrl(savedInput);
         localStorage.removeItem("lastInput");
       }
     }
   }, [user]);
 
+  useEffect(() => {
+    // Extract video ID from YouTube URL
+    const extractVideoId = (url: string) => {
+      const regExp =
+        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return match && match[2].length === 11 ? match[2] : null;
+    };
+
+    const id = extractVideoId(videoUrl);
+    setVideoId(id || "");
+  }, [videoUrl]);
+
   const onSubmitPosts = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!user) {
-      localStorage.setItem("lastInput", userInput);
+      localStorage.setItem("lastInput", videoUrl);
       openSignUp();
       return;
     }
@@ -102,8 +101,8 @@ const ContentGenerator: React.FC = () => {
     setDisplayError("");
 
     try {
-      handleSubmit(event, {
-        body: { userInput, selectedPosts: favouritePosts },
+      await submit({
+        body: { videoUrl, selectedPosts: favouritePosts },
       });
     } catch (error) {
       setDisplayError(
@@ -117,25 +116,40 @@ const ContentGenerator: React.FC = () => {
       <div className="mx-auto max-w-6xl">
         <RenderPosts
           isLoading={isLoading}
-          posts={posts}
+          posts={linkedInObject?.posts}
           favouritePosts={favouritePosts}
           setFavouritePosts={setFavouritePosts}
         />
       </div>
       <div className="mx-auto p-6 bg-background rounded-lg shadow-md text-foreground max-w-[560px]">
         <form onSubmit={onSubmitPosts}>
-          {!isLoading && !posts && (
-            <div className="mb-5 text-start">
-              <Textarea
-                className="mt-2 resize-none"
-                id="user-input"
-                placeholder="Enter your topic..."
-                rows={15}
-                value={userInput}
-                onChange={(e) => setUserInput(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
+          {!isLoading && !linkedInObject?.posts && (
+            <>
+              <div className="mb-5 text-start">
+                <Input
+                  id="youtube-link"
+                  type="text"
+                  placeholder="Enter YouTube video URL..."
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              {videoId && (
+                <div className="mb-5">
+                  <iframe
+                    width="100%"
+                    height="315"
+                    src={`https://www.youtube.com/embed/${videoId}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )}
+            </>
           )}
 
           <Button
@@ -162,4 +176,4 @@ const ContentGenerator: React.FC = () => {
   );
 };
 
-export default ContentGenerator;
+export default HormoziContentGenerator;

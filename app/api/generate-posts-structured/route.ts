@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamObject, streamText } from "ai";
+import { streamObject } from "ai";
 import { postSchema } from "../schema/schema";
 import { HormoziHooks, HormoziOutlierTweets } from "../../data/hormozi";
 
@@ -20,7 +20,6 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export async function POST(req: Request) {
   try {
-    console.log("test");
     const context = await req.json();
     const { userInput, selectedPosts } = context.body;
 
@@ -68,24 +67,11 @@ ${shuffledTweets}
 ${userInput}
 
 -------
-## OUTPUT FORMAT:
-<posts>
-  <post>
-    <content>
-    --YOUR POST CONTENT HERE--
-    </content>
-    <rating>
-    --YOUR POST RATING HERE--
-    </rating>
-  </post>
-  --REPEAT FOR EACH POST--
-<posts>
-
--------
 Assistant: `;
 
-    const result = await streamText({
+    const result = await streamObject({
       model: anthropic("claude-3-5-sonnet-20240620"),
+      schema: postSchema,
       prompt: prompt,
     });
 

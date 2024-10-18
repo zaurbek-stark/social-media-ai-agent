@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamObject, streamText } from "ai";
+import { streamObject } from "ai";
 import { postSchema } from "../schema/schema";
 import { HormoziHooks, HormoziOutlierTweets } from "../../data/hormozi";
 
@@ -20,13 +20,26 @@ function shuffleArray<T>(array: T[]): T[] {
 
 export async function POST(req: Request) {
   try {
-    console.log("test");
     const context = await req.json();
-    const { userInput, selectedPosts } = context.body;
+    const { videoUrl, selectedPosts } = context.body;
 
     const protocol = req.headers.get("x-forwarded-proto") || "http";
     const host = req.headers.get("host") || "localhost:3000";
     const baseUrl = `${protocol}://${host}`;
+
+    // Fetch transcript
+    const transcriptRes = await fetch(
+      `${baseUrl}/api/scrape-video?url=${encodeURIComponent(videoUrl)}`
+    );
+
+    if (!transcriptRes.ok) {
+      throw new Error(
+        `Failed to fetch transcript: ${transcriptRes.statusText}`
+      );
+    }
+
+    const { transcript } = await transcriptRes.json();
+    console.log("🚀 ~ POST ~ transcript:", transcript);
 
     // Shuffle the arrays before using them
     const shuffledHooks = shuffleArray(HormoziHooks).join("\n* ");
@@ -35,7 +48,7 @@ export async function POST(req: Request) {
     );
     console.log("🚀 ~ POST ~ shuffledTweets:", shuffledTweets);
 
-    const prompt = `I will give you a topic. Generate 9 posts based on the following rules and post examples.
+    const prompt = `I will give you a video source transcript. Generate 9 posts based on the following rules and post examples.
 -------
 ## RULES:
 - Start with a strong and concise hook.
@@ -64,28 +77,15 @@ You can use these posts as inspiration for the WRITTING STYLE only (don't copy t
 ${shuffledTweets}
 
 -------
-## SOURCE TOPIC:
-${userInput}
-
--------
-## OUTPUT FORMAT:
-<posts>
-  <post>
-    <content>
-    --YOUR POST CONTENT HERE--
-    </content>
-    <rating>
-    --YOUR POST RATING HERE--
-    </rating>
-  </post>
-  --REPEAT FOR EACH POST--
-<posts>
+## SOURCE TRANSCRIPT:
+${transcript}
 
 -------
 Assistant: `;
 
-    const result = await streamText({
+    const result = await streamObject({
       model: anthropic("claude-3-5-sonnet-20240620"),
+      schema: postSchema,
       prompt: prompt,
     });
 
