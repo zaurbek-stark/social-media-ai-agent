@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamObject, streamText } from "ai";
-import { postSchema } from "../schema/schema";
+import { streamText } from "ai";
 import { HormoziHooks, HormoziOutlierTweets } from "../../data/hormozi";
 
 export const runtime = "edge";
@@ -21,12 +20,11 @@ function shuffleArray<T>(array: T[]): T[] {
 export async function POST(req: Request) {
   try {
     console.log("test");
-    const context = await req.json();
-    const { userInput, selectedPosts } = context.body;
+    const { prompt: userInput, context } = await req.json();
+    console.log("🚀 ~ POST ~ context:", context);
 
-    const protocol = req.headers.get("x-forwarded-proto") || "http";
-    const host = req.headers.get("host") || "localhost:3000";
-    const baseUrl = `${protocol}://${host}`;
+    const selectedPosts = JSON.stringify(context);
+    console.log("🚀 ~ POST ~ selectedPosts:", selectedPosts);
 
     // Shuffle the arrays before using them
     const shuffledHooks = shuffleArray(HormoziHooks).join("\n* ");

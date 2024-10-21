@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import PostsGrid from "./PostsGrid";
 import PostsSkeleton from "./PostsSkeleton";
-import { useChat, experimental_useObject as useObject } from "ai/react";
+import { useCompletion } from "ai/react";
 import { postSchema } from "../api/schema/schema";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,30 +55,20 @@ const ContentGenerator: React.FC = () => {
   const [displayError, setDisplayError] = useState("");
   const { user } = useUser();
   const { openSignUp } = useClerk();
+  const [error, setError] = useState("");
 
-  const { handleSubmit, isLoading, error } = useChat({
+  const {
+    completion,
+    complete,
+    isLoading,
+    error: completionError,
+  } = useCompletion({
     api: "/api/generate-posts",
-    onFinish: (message) => {
-      // parse message into posts array
-      const parsedMessage = message.content;
-      console.log(parsedMessage);
-      // setPosts(parsedMessage)
-
-      setDisplayError("");
-    },
     onError: (error) => {
-      setDisplayError(`An error occured calling the API: ${error}`);
+      setError(`An error occurred: ${error.message}`);
     },
   });
-  // const {
-  //   object: linkedInObject,
-  //   submit,
-  //   isLoading,
-  //   error,
-  // } = useObject({
-  //   api: "/api/generate-posts",
-  //   schema: postSchema,
-  // });
+  console.log("🚀 ~ completion:", completion);
 
   useEffect(() => {
     if (user) {
@@ -93,6 +83,8 @@ const ContentGenerator: React.FC = () => {
   const onSubmitPosts = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    console.log("Hello mate");
+
     if (!user) {
       localStorage.setItem("lastInput", userInput);
       openSignUp();
@@ -102,7 +94,9 @@ const ContentGenerator: React.FC = () => {
     setDisplayError("");
 
     try {
-      handleSubmit(event, {
+      console.log("ohhh");
+
+      await complete(userInput, {
         body: { userInput, selectedPosts: favouritePosts },
       });
     } catch (error) {
